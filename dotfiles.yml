@@ -1,0 +1,47 @@
+---
+- name: Deploy Dotfiles and Configurations
+  hosts: localhost
+  become: false
+  vars:
+    dotfiles_repo: "."
+    dotfiles:
+      - { src: ".bashrc", dest: "~/.bashrc" }
+      - { src: ".bash_profile", dest: "~/.bash_profile" }
+      - { src: ".tmux.conf", dest: "~/.tmux.conf" }
+  config_dirs:
+    - { src: "nvim", dest: "~/.config/nvim" }
+    - { src: "fish", dest: "~/.config/fish" }
+    - { src: "foot", dest: "~/.config/foot" }
+  tasks:
+    - name: Ensure .config directory exists
+      file:
+        path: "~/.config"
+        state: directory
+        mode: '0755'
+
+    - name: Remove existing dotfiles
+      file:
+        path: "{{ item.dest | expanduser }}"
+        state: absent
+      loop: "{{ dotfiles }}"
+
+    - name: Create symlinks for dotfiles
+      file:
+        src: "{{ dotfiles_repo }}/{{ item.src }}"
+        dest: "{{ item.dest | expanduser }}"
+        state: link
+      loop: "{{ dotfiles }}"
+
+    - name: Remove existing configuration directories
+      file:
+        path: "{{ item.dest | expanduser }}"
+        state: absent
+      loop: "{{ config_dirs }}"
+
+    - name: Create symlinks for configuration directories
+      file:
+        src: "{{ dotfiles_repo }}/{{ item.src }}"
+        dest: "{{ item.dest | expanduser }}"
+        state: link
+      loop: "{{ config_dirs }}"
+
