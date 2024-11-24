@@ -2,9 +2,12 @@
 - name: Deploy Dotfiles and Configurations to Remote Machines
   hosts: remote_machines
   become: false
+  vars_files:
+    - vault.yml
+
   vars:
     dotfiles_repo: "~/dotfiles"
-    repo_url: "https://github.com/yourusername/dotfiles.git"
+    repo_url: "https://github.com/arviiyer/dotfiles.git"
     dotfiles:
       - { src: ".bashrc", dest: "~/.bashrc" }
       - { src: ".bash_profile", dest: "~/.bash_profile" }
