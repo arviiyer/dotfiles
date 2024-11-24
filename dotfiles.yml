@@ -1,18 +1,50 @@
 ---
-- name: Deploy Dotfiles and Configurations
-  hosts: localhost
+- name: Deploy Dotfiles and Configurations to Remote Machines
+  hosts: remote_machines
   become: false
   vars:
-    dotfiles_repo: "."
+    dotfiles_repo: "~/dotfiles"
+    repo_url: "https://github.com/yourusername/dotfiles.git"
     dotfiles:
       - { src: ".bashrc", dest: "~/.bashrc" }
       - { src: ".bash_profile", dest: "~/.bash_profile" }
       - { src: ".tmux.conf", dest: "~/.tmux.conf" }
-  config_dirs:
-    - { src: "nvim", dest: "~/.config/nvim" }
-    - { src: "fish", dest: "~/.config/fish" }
-    - { src: "foot", dest: "~/.config/foot" }
+    config_dirs:
+      - { src: "nvim", dest: "~/.config/nvim" }
+      - { src: "fish", dest: "~/.config/fish" }
+      - { src: "foot", dest: "~/.config/foot" }
+      - { src: "zshrc.d", dest: "~/.config/zshrc.d" }
   tasks:
+    - name: Install necessary packages on RedHat-based systems
+      yum:
+        name:
+          - git
+          - fish
+          - zsh
+          - tmux
+          - neovim
+        state: present
+      when: ansible_facts['os_family'] == 'RedHat'
+
+    - name: Install necessary packages on Debian-based systems
+      apt:
+        name:
+          - git
+          - fish
+          - zsh
+          - tmux
+          - neovim
+        state: present
+        update_cache: yes
+      when: ansible_facts['os_family'] == 'Debian'
+
+    - name: Clone dotfiles repository on remote host
+      git:
+        repo: "{{ repo_url }}"
+        dest: "{{ dotfiles_repo }}"
+        version: "main" 
+        force: yes
+
     - name: Ensure .config directory exists
       file:
         path: "~/.config"
@@ -44,4 +76,10 @@
         dest: "{{ item.dest | expanduser }}"
         state: link
       loop: "{{ config_dirs }}"
+
+    - name: Install Tmux Plugin Manager (TPM)
+      git:
+        repo: https://github.com/tmux-plugins/tpm
+        dest: "~/.tmux/plugins/tpm"
+        update: yes
 
