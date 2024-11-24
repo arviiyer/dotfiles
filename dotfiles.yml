@@ -25,6 +25,7 @@
           - neovim
         state: present
       when: ansible_facts['os_family'] == 'RedHat'
+      become: true
 
     - name: Install necessary packages on Debian-based systems
       apt:
@@ -37,6 +38,7 @@
         state: present
         update_cache: yes
       when: ansible_facts['os_family'] == 'Debian'
+      become: true
 
     - name: Clone dotfiles repository on remote host
       git:
